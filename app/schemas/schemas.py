@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import List, Optional
 from enum import Enum
 
@@ -14,6 +14,16 @@ class UsuarioCreate(BaseModel):
     email: str
     senha: str
     consentimento_lgpd: bool = False
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "nome": "Gabriel",
+                "email": "test@gmail.com",
+                "senha": "123teste",
+                "consentimento_lgpd": True
+            }
+        }
 
 class UsuarioLogin(BaseModel):
     email: str

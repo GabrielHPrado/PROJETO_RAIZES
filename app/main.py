@@ -1,5 +1,7 @@
+
 from fastapi import FastAPI
-from app.models import Base, engine
+from app.core.database import engine
+from app.models.models import Base
 from app.routes import auth_routes, produtos_routes, pedidos_routes, pagamentos_routes, fidelidade_routes
 
 app = FastAPI(
@@ -7,8 +9,10 @@ app = FastAPI(
     version="1.0"
 )
 
+# Criar as tabelas no banco de dados
 Base.metadata.create_all(bind=engine)
 
+# Incluir as rotas
 app.include_router(auth_routes.router)
 app.include_router(produtos_routes.router)
 app.include_router(pedidos_routes.router)

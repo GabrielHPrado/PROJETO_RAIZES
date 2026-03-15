@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app import schemas, models  # <-- ADICIONEI O models AQUI
+from app.database import get_db  # Corrigido
+from app.schemas import schemas
+from app.models import models
 from app.services import pedido_service
 
 router = APIRouter(prefix="/pedidos", tags=["Pedidos"])
 
 @router.post("/", response_model=schemas.PedidoResponse)
-def criar_pedido(pedido: schemas.PedidoCreate, db: Session = Depends(get_db)):
+async def criar_pedido(pedido: schemas.PedidoCreate, db: Session = Depends(get_db)):
     return pedido_service.criar_pedido(db, pedido)
 
 @router.get("/")

@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.database import get_db
+from app.database import get_db  # Corrigido
 from app.services import pedido_service
-# NÃO PRECISA DE models AQUI porque só usa o service
 
 router = APIRouter(prefix="/fidelidade", tags=["Fidelidade"])
 

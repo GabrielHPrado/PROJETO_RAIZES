@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
-from app import models, schemas
-from datetime import datetime
-import random
-import uuid
+from fastapi import HTTPException
+from app.schemas import schemas
+from app.models import models
+from app.models.models import CanalPedido, StatusPedido
+from app.services.pagamento_mock_service import PagamentoMockService
 
 def validar_estoque(db: Session, itens: list):
     for item in itens:
@@ -16,10 +16,10 @@ def validar_estoque(db: Session, itens: list):
                 status_code=409,
                 detail={
                     "error": "ESTOQUE_INSUFICIENTE",
-                    "message": f"Estoque insuficiente",
+                    "message": f"Estoque insuficiente para o produto {item.produto_id}",
                     "details": [{
                         "field": "quantidade",
-                        "issue": f"Disponível: {estoque.quantidade if estoque else 0}"
+                        "issue": f"Disponível: {estoque.quantidade if estoque else 0}, Solicitado: {item.quantidade}"
                     }]
                 }
             )
@@ -40,7 +40,7 @@ def criar_pedido(db: Session, pedido: schemas.PedidoCreate):
     
     db_pedido = models.Pedido(
         usuario_id=pedido.cliente_id,
-        canal_pedido=pedido.canal_pedido.value,
+        canal_pedido= CanalPedido(pedido.canal_pedido.value),
         valor_total=valor_total
     )
     db.add(db_pedido)
@@ -56,6 +56,7 @@ def criar_pedido(db: Session, pedido: schemas.PedidoCreate):
         )
         db.add(db_item)
     
+    # Registrar auditoria
     db.add(models.Auditoria(
         usuario_id=pedido.cliente_id,
         pedido_id=db_pedido.id,
@@ -66,30 +67,32 @@ def criar_pedido(db: Session, pedido: schemas.PedidoCreate):
     db.refresh(db_pedido)
     return db_pedido
 
-def processar_pagamento_mock(db: Session, pedido_id: int):
+async def processar_pagamento_mock(db: Session, pedido_id: int):
     pedido = db.query(models.Pedido).filter(models.Pedido.id == pedido_id).first()
     if not pedido:
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
     
-    rand = random.random()
-    if rand < 0.7:
-        status_pag = "APROVADO"
-        pedido.status = models.StatusPedido.PAGAMENTO_CONFIRMADO
+    # Usar o serviço mock
+    status_pag, transacao_id, detalhes = await PagamentoMockService.processar_pagamento(
+        valor=pedido.valor_total
+    )
+    
+    # Atualizar status do pedido baseado no pagamento
+    if status_pag == "APROVADO":
+        pedido.status = StatusPedido.PAGAMENTO_CONFIRMADO
         
+        # Adicionar pontos de fidelidade (1 ponto a cada R$10)
         db.add(models.Fidelidade(
             cliente_id=pedido.usuario_id,
             pontos=int(pedido.valor_total / 10),
             tipo="ACUMULO",
             pedido_id=pedido_id
         ))
-    elif rand < 0.9:
-        status_pag = "RECUSADO"
-        pedido.status = models.StatusPedido.CANCELADO
-    else:
-        status_pag = "ERRO"
+    elif status_pag == "RECUSADO":
+        pedido.status = StatusPedido.CANCELADO
+    # Se for ERRO, mantém AGUARDANDO_PAGAMENTO
     
-    transacao_id = f"MOCK_{uuid.uuid4().hex[:8].upper()}"
-    
+    # Registrar pagamento
     db_pagamento = models.Pagamento(
         pedido_id=pedido_id,
         valor=pedido.valor_total,
@@ -99,6 +102,7 @@ def processar_pagamento_mock(db: Session, pedido_id: int):
     )
     db.add(db_pagamento)
     
+    # Auditoria
     db.add(models.Auditoria(
         usuario_id=pedido.usuario_id,
         pedido_id=pedido_id,

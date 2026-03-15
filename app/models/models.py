@@ -1,20 +1,7 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Boolean, DateTime, Enum
-from sqlalchemy.orm import sessionmaker, declarative_base, relationship
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, DateTime, Enum
+from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime
 import enum
-
-DATABASE_URL = "sqlite:///./database.db"
-
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
-
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
 
 Base = declarative_base()
 
@@ -42,6 +29,11 @@ class Usuario(Base):
     senha = Column(String)
     consentimento_lgpd = Column(Boolean, default=False)
     data_consentimento = Column(DateTime, nullable=True)
+    
+    # Relacionamentos
+    pedidos = relationship("Pedido", back_populates="usuario")
+    pontos_fidelidade = relationship("Fidelidade", back_populates="cliente")
+    auditorias = relationship("Auditoria", back_populates="usuario")
 
 class Produto(Base):
     __tablename__ = "produtos"
@@ -50,6 +42,10 @@ class Produto(Base):
     nome = Column(String)
     descricao = Column(String)
     preco = Column(Float)
+    
+    # Relacionamentos
+    estoque = relationship("Estoque", back_populates="produto", uselist=False)
+    itens_pedido = relationship("ItemPedido", back_populates="produto")
 
 class Estoque(Base):
     __tablename__ = "estoques"
@@ -58,6 +54,9 @@ class Estoque(Base):
     produto_id = Column(Integer, ForeignKey("produtos.id"))
     unidade_id = Column(Integer, default=1)
     quantidade = Column(Integer, default=0)
+    
+    # Relacionamentos
+    produto = relationship("Produto", back_populates="estoque")
 
 class Pedido(Base):
     __tablename__ = "pedidos"
@@ -69,7 +68,12 @@ class Pedido(Base):
     valor_total = Column(Float, default=0)
     created_at = Column(DateTime, default=datetime.now)
     
-    itens = relationship("ItemPedido", back_populates="pedido")
+    # Relacionamentos
+    usuario = relationship("Usuario", back_populates="pedidos")
+    itens = relationship("ItemPedido", back_populates="pedido", cascade="all, delete-orphan")
+    pagamento = relationship("Pagamento", back_populates="pedido", uselist=False)
+    pontos_fidelidade = relationship("Fidelidade", back_populates="pedido")
+    auditorias = relationship("Auditoria", back_populates="pedido")
 
 class ItemPedido(Base):
     __tablename__ = "itens_pedido"
@@ -80,7 +84,9 @@ class ItemPedido(Base):
     quantidade = Column(Integer)
     preco_unitario = Column(Float)
 
+    # Relacionamentos
     pedido = relationship("Pedido", back_populates="itens")
+    produto = relationship("Produto", back_populates="itens_pedido")
 
 class Pagamento(Base):
     __tablename__ = "pagamentos"
@@ -92,6 +98,9 @@ class Pagamento(Base):
     status = Column(String)
     transacao_id = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
+    
+    # Relacionamentos
+    pedido = relationship("Pedido", back_populates="pagamento")
 
 class Fidelidade(Base):
     __tablename__ = "fidelidade"
@@ -99,9 +108,13 @@ class Fidelidade(Base):
     id = Column(Integer, primary_key=True, index=True)
     cliente_id = Column(Integer, ForeignKey("usuarios.id"))
     pontos = Column(Integer, default=0)
-    tipo = Column(String)
+    tipo = Column(String)  # ACUMULO, RESGATE
     pedido_id = Column(Integer, ForeignKey("pedidos.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.now)
+    
+    # Relacionamentos
+    cliente = relationship("Usuario", back_populates="pontos_fidelidade")
+    pedido = relationship("Pedido", back_populates="pontos_fidelidade")
 
 class Auditoria(Base):
     __tablename__ = "auditorias"
@@ -110,6 +123,10 @@ class Auditoria(Base):
     usuario_id = Column(Integer, ForeignKey("usuarios.id"))
     pedido_id = Column(Integer, ForeignKey("pedidos.id"), nullable=True)
     acao = Column(String)
-    dados_anteriores = Column(String, nullable=True)
-    dados_novos = Column(String, nullable=True)
+    dados_anteriores = Column(String, nullable=True)  # JSON string
+    dados_novos = Column(String, nullable=True)       # JSON string
     created_at = Column(DateTime, default=datetime.now)
+    
+    # Relacionamentos
+    usuario = relationship("Usuario", back_populates="auditorias")
+    pedido = relationship("Pedido", back_populates="auditorias")
