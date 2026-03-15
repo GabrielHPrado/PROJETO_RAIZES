@@ -1,13 +1,31 @@
 # Ambiente virtual
 venv/
+.env
 
-# Cache do Python
+# Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 # Banco de dados local
 database.db
+*.db
 
 # Arquivos do sistema
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# Test cache
+.pytest_cache/
+
+# Distribuição
+dist/
+build/
