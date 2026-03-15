@@ -1,0 +1,79 @@
+{
+  "info": {
+    "name": "Raízes do Nordeste - Testes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Registrar Usuário (LGPD)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"teste@email.com\",\n  \"nome\": \"Cliente Teste\",\n  \"senha\": \"123456\",\n  \"consentimento_lgpd\": true\n}"
+        },
+        "url": "http://localhost:8000/auth/register"
+      }
+    },
+    {
+      "name": "2. Login",
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"teste@email.com\",\n  \"senha\": \"123456\"\n}"
+        },
+        "url": "http://localhost:8000/auth/login"
+      }
+    },
+    {
+      "name": "3. Criar Pedido (COM CANAL)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente_id\": 1,\n  \"canal_pedido\": \"APP\",\n  \"itens\": [\n    {\n      \"produto_id\": 1,\n      \"quantidade\": 2\n    }\n  ]\n}"
+        },
+        "url": "http://localhost:8000/pedidos"
+      }
+    },
+    {
+      "name": "4. Teste Negativo - SEM CANAL (Erro 422)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente_id\": 1,\n  \"itens\": [\n    {\n      \"produto_id\": 1,\n      \"quantidade\": 2\n    }\n  ]\n}"
+        },
+        "url": "http://localhost:8000/pedidos"
+      }
+    },
+    {
+      "name": "5. Processar Pagamento Mock",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:8000/pagamentos/processar/1"
+      }
+    },
+    {
+      "name": "6. Consultar Pontos Fidelidade",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8000/fidelidade/pontos/1"
+      }
+    }
+  ]
+}
