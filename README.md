@@ -84,7 +84,7 @@ git clone https://github.com/GabrielHPrado/PROJETO_RAIZES
 ## 2 - Entrar na pasta
 
 ```
-cd raizes-nordeste-api
+cd PROJETO_RAIZES
 ```
 
 ---
