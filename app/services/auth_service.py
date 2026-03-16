@@ -3,16 +3,14 @@ from fastapi import HTTPException, status
 from datetime import datetime
 import logging
 
-# CORREÇÃO: Importar diretamente as classes, não o módulo inteiro
-from app.schemas.schemas import UsuarioCreate, UsuarioLogin
+from app.schemas.schemas import UsuarioCreate, UsuarioLogin, UsuarioResponse
 from app.models import models
 from app.core.security import verificar_senha, hash_senha, criar_token
 
-# Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def registrar_usuario(db: Session, usuario: UsuarioCreate):  # Agora usa a classe diretamente
+def registrar_usuario(db: Session, usuario: UsuarioCreate):
     try:
         logger.info(f"Tentando registrar usuário: {usuario.email}")
         
@@ -60,11 +58,12 @@ def registrar_usuario(db: Session, usuario: UsuarioCreate):  # Agora usa a class
                 detail="Erro ao processar senha"
             )
         
-        # Criar usuário
+        # Criar usuário com perfil
         db_usuario = models.Usuario(
             nome=usuario.nome.strip(),
             email=usuario.email.lower().strip(),
             senha=senha_hash,
+            perfil=usuario.perfil.value,  # NOVO CAMPO
             consentimento_lgpd=usuario.consentimento_lgpd,
             data_consentimento=datetime.now() if usuario.consentimento_lgpd else None
         )
@@ -80,6 +79,7 @@ def registrar_usuario(db: Session, usuario: UsuarioCreate):  # Agora usa a class
             "id": db_usuario.id,
             "nome": db_usuario.nome,
             "email": db_usuario.email,
+            "perfil": db_usuario.perfil.value,  # NOVO CAMPO
             "consentimento_lgpd": db_usuario.consentimento_lgpd,
             "data_consentimento": db_usuario.data_consentimento
         }
@@ -94,7 +94,7 @@ def registrar_usuario(db: Session, usuario: UsuarioCreate):  # Agora usa a class
             detail=f"Erro interno ao registrar usuário: {str(e)}"
         )
 
-def login_usuario(db: Session, login: UsuarioLogin):  # Agora usa a classe diretamente
+def login_usuario(db: Session, login: UsuarioLogin):
     try:
         logger.info(f"Tentativa de login: {login.email}")
         
@@ -129,7 +129,8 @@ def login_usuario(db: Session, login: UsuarioLogin):  # Agora usa a classe diret
             "usuario": {
                 "id": usuario.id,
                 "nome": usuario.nome,
-                "email": usuario.email
+                "email": usuario.email,
+                "perfil": usuario.perfil.value  # NOVO CAMPO
             }
         }
         

@@ -14,11 +14,10 @@ class PagamentoMockService:
         Retorna: (status, transacao_id, detalhes)
         Status possíveis: APROVADO, RECUSADO, ERRO
         """
-        # Simula latência de rede
+        # Simulação de latencia de rede
         import asyncio
         await asyncio.sleep(1)
         
-        # Gera ID único
         transacao_id = f"MOCK_{uuid.uuid4().hex[:8].upper()}"
         
         # Regras de simulação:
@@ -28,13 +27,13 @@ class PagamentoMockService:
         
         rand = random.random()
         
-        if rand < 0.7:  # 70% aprovado
+        if rand < 0.7:  
             status = "APROVADO"
             motivo = "Transação aprovada"
-        elif rand < 0.9:  # 20% recusado
+        elif rand < 0.9:  
             status = "RECUSADO"
             motivo = "Cartão recusado"
-        else:  # 10% erro
+        else: 
             status = "ERRO"
             motivo = "Erro de comunicação com o provedor"
         

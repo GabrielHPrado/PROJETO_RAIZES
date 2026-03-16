@@ -60,5 +60,4 @@ def criar_token(dados: dict) -> str:
     token = jwt.encode(dados_token, SECRET_KEY, algorithm=ALGORITHM)
     return token
 
-# Manter compatibilidade com o nome antigo se necessário
 gerar_hash_senha = hash_senha

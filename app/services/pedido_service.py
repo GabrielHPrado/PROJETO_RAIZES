@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from app.schemas import schemas
+from app.schemas.schemas import PedidoCreate, PedidoItemCreate
 from app.models import models
 from app.models.models import CanalPedido, StatusPedido
 from app.services.pagamento_mock_service import PagamentoMockService
@@ -90,7 +91,7 @@ async def processar_pagamento_mock(db: Session, pedido_id: int):
         ))
     elif status_pag == "RECUSADO":
         pedido.status = StatusPedido.CANCELADO
-    # Se for ERRO, mantém AGUARDANDO_PAGAMENTO
+    
     
     # Registrar pagamento
     db_pagamento = models.Pagamento(
