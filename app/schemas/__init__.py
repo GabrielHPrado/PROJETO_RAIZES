@@ -24,8 +24,8 @@ from .schemas import (
     EstoqueResponse,
     EstoqueMovimentacao,
     
-    # PEDIDOS (com alias para manter compatibilidade)
-    PedidoItemCreate as PedidoItem,  # ALIAS - mantém compatibilidade
+    # PEDIDOS 
+    PedidoItemCreate as PedidoItem,  
     PedidoCreate,
     PedidoResponse,
     PedidoListResponse,

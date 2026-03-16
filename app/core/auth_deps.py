@@ -9,8 +9,8 @@ from app.models import models
 from app.core.config import settings
 from app.core.security import SECRET_KEY, ALGORITHM
 
-# Mude para o novo endpoint /auth/token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")  # ALTERADO AQUI
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token") 
 
 async def get_usuario_atual(
     token: str = Depends(oauth2_scheme),
@@ -26,7 +26,7 @@ async def get_usuario_atual(
     )
     
     try:
-        # Decodificar token
+       
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         usuario_id: str = payload.get("sub")
         if usuario_id is None:
@@ -34,7 +34,7 @@ async def get_usuario_atual(
     except JWTError:
         raise credentials_exception
     
-    # Buscar usuário no banco
+ 
     usuario = db.query(models.Usuario).filter(models.Usuario.id == int(usuario_id)).first()
     if usuario is None:
         raise credentials_exception
