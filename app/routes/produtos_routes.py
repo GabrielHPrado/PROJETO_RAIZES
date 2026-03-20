@@ -143,6 +143,25 @@ def atualizar_produto(
 
     return db_produto
 
+@router.put("/{produto_id}/estoque")
+def atualizar_estoque(
+    produto_id: int,
+    quantidade: int,
+    db: Session = Depends(get_db),
+    usuario_atual: models.Usuario = Depends(requer_gerente_ou_admin)
+):
+    estoque = db.query(models.Estoque).filter(models.Estoque.produto_id == produto_id).first()
+    if not estoque:
+        raise HTTPException(status_code=404, detail="Estoque não encontrado")
+    
+    estoque.quantidade = quantidade
+    db.commit()
+    
+    return {
+        "produto_id": produto_id,
+        "quantidade": estoque.quantidade,
+        "mensagem": "Estoque atualizado com sucesso"
+    }
 
 @router.delete("/{produto_id}", status_code=204)
 def deletar_produto(
